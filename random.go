@@ -12,10 +12,17 @@ import (
 var funcDist *godes.FunctionalDistr
 var names []string
 var cd *conditionalDistribution
+var contextSize int
 
 type conditionalDistribution []*ngramItem
 
 var probabilitiesLookup map[string][]ngramProb
+
+// Init Function to get the initial conditions for starting the name generation properties
+func Init(filename string, initContextSize int) {
+	cd = getConditionalDistribution(filename, initContextSize)
+	contextSize = initContextSize
+}
 
 func findInSlice(arr []ngramProb, val string) int {
 	for j := range arr {
@@ -62,16 +69,13 @@ func (cd *conditionalDistribution) lookUpProbabilities(lookUp string) []ngramPro
 	return probabilitiesLookup[lookUp]
 }
 
+// GetName Main function to call to get a name
 func GetName() string {
 	if funcDist == nil {
 		funcDist = godes.NewFunctionalDistr(true)
 	}
 	if probabilitiesLookup == nil {
 		probabilitiesLookup = make(map[string][]ngramProb)
-	}
-	contextSize := 5
-	if cd == nil {
-		cd = getConditionalDistribution(contextSize)
 	}
 
 	name := strings.Repeat(" ", contextSize)
@@ -120,8 +124,8 @@ type ngramItem struct {
 	next string
 }
 
-func getConditionalDistribution(contextSize int) *conditionalDistribution {
-	getNames()
+func getConditionalDistribution(filename string, contextSize int) *conditionalDistribution {
+	getNames(filename)
 	paramN := contextSize + 1
 	pad := strings.Repeat(" ", contextSize)
 	nm := make([]string, len(names))
@@ -159,8 +163,8 @@ func splitWord(input string, size int) []string {
 	return tokens
 }
 
-func getNames() {
-	nameFile, _ := os.Open("first-names.txt")
+func getNames(filename string) {
+	nameFile, _ := os.Open(filename)
 	defer nameFile.Close()
 	scanner := bufio.NewScanner(nameFile)
 	for scanner.Scan() {
